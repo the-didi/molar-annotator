@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>简单文字标注</title>
+    <style>
+      .molar-annotator-text--labeled {
+        background-color: red;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="example"></div>
+    <script src="../node_modules/@molar/annotator-core/dist/annotator-core.global.js"></script>
+    <script>
+      let { Core } = MolarAnnotatorCore;
+      let originString = `孟子见梁惠王
+      沛公则置车骑
+      此人一一为所具言所闻
+      廉君宣恶言`;
+      let domElement = document.getElementById("example");
+      const annotator = new Core(originString, domElement);
+      annotator.on("textSelected", (startIndex, endIndex) => {});
+    </script>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "@molar/annotator-label",
+  "version": "0.0.1",
+  "main": "index.js",
+  "module": "dist/label.esm-bundler.js",
+  "license": "MIT",
+  "buildOptions": {
+    "name": "MolarAnnotatorLabel",
+    "formats":[
+      "cjs",
+      "esm-bundler",
+      "global"
+    ]
+  }
+}

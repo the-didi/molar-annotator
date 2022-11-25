@@ -1,0 +1,15 @@
+{
+  "name": "@molar/annotator-store",
+  "version": "0.0.1",
+  "main": "index.js",
+  "module": "dist/store.esm-bundler.js",
+  "license": "MIT",
+  "buildOptions": {
+    "name": "MolarAnnotatorStore",
+    "formats":[
+      "cjs",
+      "esm-bundler",
+      "global"
+    ]
+  }
+}

@@ -1,0 +1,1 @@
+{"version":3,"file":"annotator-label.global.js","sources":["../src/index.ts"],"sourcesContent":["class Label{\n    constructor(){}\n}\nexport {Label}"],"names":[],"mappings":";;;IAAA,MAAM,KAAK,CAAA;IACP,IAAA,WAAA,GAAA,GAAe;IAClB;;;;;;;;;;;;"}

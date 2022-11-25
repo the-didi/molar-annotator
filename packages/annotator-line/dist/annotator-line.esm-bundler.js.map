@@ -1,0 +1,1 @@
+{"version":3,"file":"annotator-line.esm-bundler.js","sources":["../src/index.ts"],"sourcesContent":["class Line{\n    constructor(){}\n}\nexport {Line}"],"names":[],"mappings":"AAAA,MAAM,IAAI,CAAA;AACN,IAAA,WAAA,GAAA,GAAe;AAClB;;;;"}

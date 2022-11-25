@@ -1,0 +1,1 @@
+{"version":3,"file":"annotator-line.global.js","sources":["../src/index.ts"],"sourcesContent":["class Line{\n    constructor(){}\n}\nexport {Line}"],"names":[],"mappings":";;;IAAA,MAAM,IAAI,CAAA;IACN,IAAA,WAAA,GAAA,GAAe;IAClB;;;;;;;;;;;;"}

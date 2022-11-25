@@ -1,0 +1,1 @@
+{"version":3,"file":"annotator-label.esm-bundler.js","sources":["../src/index.ts"],"sourcesContent":["class Label{\n    constructor(){}\n}\nexport {Label}"],"names":[],"mappings":"AAAA,MAAM,KAAK,CAAA;AACP,IAAA,WAAA,GAAA,GAAe;AAClB;;;;"}
