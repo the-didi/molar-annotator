@@ -5,47 +5,42 @@ var HTML_NODE_ENUMS;
     HTML_NODE_ENUMS["DIV"] = "div";
 })(HTML_NODE_ENUMS || (HTML_NODE_ENUMS = {}));
 
+var MOLAR_LABEL_CLASS_NAME;
+(function (MOLAR_LABEL_CLASS_NAME) {
+    MOLAR_LABEL_CLASS_NAME["MOLAR_TEXT_LABLED"] = "molar-annotator-text--labeled";
+    MOLAR_LABEL_CLASS_NAME["MOLAR_TEXT_UNLABELED"] = "molar-annotator-text--unlabeled";
+    MOLAR_LABEL_CLASS_NAME["MOLAR_TEXT_INITED"] = "molar-annotator-text--inited";
+})(MOLAR_LABEL_CLASS_NAME || (MOLAR_LABEL_CLASS_NAME = {}));
+
 class Text {
-    textContent;
-    parentNode;
-    needsBR;
-    className;
-    isLabeled;
-    currentNode;
-    constructor(parentNode, textContent, needsBR = false, className, isLabeled) {
-        this.currentNode = null;
+    constructor(parentNode, textContent, className) {
+        this.currentNode = document.createElement(HTML_NODE_ENUMS.DIV);
+        this.childList = [];
         this.parentNode = parentNode;
-        this.isLabeled = isLabeled;
         this.textContent = textContent;
         this.className = className;
-        this.needsBR = needsBR;
         this.generateTextNode();
-        // generator BR
-        // const brNode = document.createElement(HTML_NODE_ENUMS.BR)
-        // this.parentNode.appendChild(brNode)
     }
     generateTextNode() {
-        const divNode = document.createElement(HTML_NODE_ENUMS.DIV);
-        const spanNode = document.createElement(HTML_NODE_ENUMS.SPAN);
-        spanNode.className = this.className;
-        spanNode.innerText = this.textContent;
-        this.currentNode = divNode;
-        this.currentNode.style.display = "inline";
-        this.currentNode.appendChild(spanNode);
-        if (this.needsBR) {
-            console.log(this.needsBR);
-            const brNode = document.createElement(HTML_NODE_ENUMS.BR);
-            this.currentNode.appendChild(brNode);
+        console.log("--generate current node--");
+        this.currentNode.innerText = this.textContent;
+        this.currentNode.className = this.className;
+        if (this.parentNode != null) {
+            this.parentNode.appendChild(this.currentNode);
         }
-        this.parentNode.appendChild(divNode);
     }
-    addChildNodeToText(parentNode, textContent, className) {
-        const textNode = document.createElement(HTML_NODE_ENUMS.SPAN);
-        textNode.innerText = textContent;
-        textNode.className = className;
-        parentNode.appendChild(textNode);
+    addChildNodeToText(parentText, childrenText) {
+        parentText.currentNode.innerText = "";
+        for (const item of childrenText) {
+            parentText.currentNode.appendChild(item.currentNode);
+        }
+        this.childList.push(...childrenText);
     }
 }
+function generateTextNode(textContent, isLabeled) {
+    const text = new Text(null, textContent, isLabeled ? MOLAR_LABEL_CLASS_NAME.MOLAR_TEXT_LABLED : MOLAR_LABEL_CLASS_NAME.MOLAR_TEXT_UNLABELED);
+    return text;
+}
 
-export { Text };
+export { Text, generateTextNode };
 //# sourceMappingURL=annotator-text.esm-bundler.js.map

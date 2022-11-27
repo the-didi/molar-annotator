@@ -2,7 +2,6 @@ var MolarAnnotatorStore = (function (exports) {
     'use strict';
 
     class Store {
-        root;
         constructor(root) {
             this.root = root;
         }

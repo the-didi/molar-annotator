@@ -1,5 +1,4 @@
 class Store {
-    root;
     constructor(root) {
         this.root = root;
     }

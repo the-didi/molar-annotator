@@ -1,6 +1,5 @@
 import {Core} from '@molar/annotator-core'
-import {Text} from '@molar/annotator-text'
-import {TextNode} from '@molar/annotator-view'
+import {Text,generateTextNode} from '@molar/annotator-text'
 import {HTML_NODE_ENUMS} from '@molar/annotator-core'
 type SelectionInfo={
     startNode:Node|null,
@@ -32,26 +31,32 @@ class TextSelectionHandler {
         } as SelectionInfo
     }
     private RenderInlineText(lineNode:Node,startIndex:number,endIndex:number){
-        console.log(lineNode)
-        const editSpan = this.root.view.textNodeList.find(e=>{
-            return e.text.currentNode.children[0] ==lineNode
-        })
-        const spanText = editSpan.text.textContent
-        const fontNode = {text:new Text(editSpan.text.currentNode,spanText.substring(0,startIndex),false,"",true),_molar_text_id:-1}
-        const labelNode = {text:new Text(editSpan.text.currentNode,spanText.substring(startIndex,endIndex),false,"molar-annotator-text--labeled",true),_molar_text_id:-1}
-        const afterNode = {text:new Text(editSpan.text.currentNode,spanText.substring(endIndex),!editSpan.text.isLabeled||endIndex!=spanText.length||spanText.substring(endIndex)=="","",true),_molar_text_id:-1} 
-        this.root.view.UpdateTextNodeListIndex([fontNode,labelNode,afterNode],editSpan._molar_text_id)
+        if(endIndex!=-1){
+            const currentText = this.root.view.findTextByNode(lineNode)
+            let fontNode = generateTextNode(lineNode.textContent.substring(0,startIndex),false)
+            let labelNode = generateTextNode(lineNode.textContent.substring(startIndex,endIndex),true)
+            let afterNode = generateTextNode(lineNode.textContent.substring(endIndex),false)
+            currentText.addChildNodeToText(currentText,[fontNode,labelNode,afterNode])
+        }else{
+            const currentText = this.root.view.findTextByNode(lineNode)
+            const fontNode = generateTextNode(lineNode.textContent.substring(0,startIndex),false)
+            const labelNode = generateTextNode(lineNode.textContent.substring(startIndex),true)
+            currentText.addChildNodeToText(currentText,[fontNode,labelNode])
+        }
     }   
     private RenderOfflineText(startLineNode:Node,endLineNode:Node,startIndex:number,endIndex:number){
-        console.log("offline")
-        // this.root.view.UpdateTextNodeListIndex()
+        const startLineIndex = this.root.view.findTextIndex(startLineNode)
+        const endLineIndex = this.root.view.findTextIndex(endLineNode)
+        this.RenderInlineText(startLineNode,startIndex,-1)
+        this.RenderInlineText(endLineNode,0,endIndex)
+        for(let i=startLineIndex+1;i<endLineIndex;i++){
+            
+        }
     }
     private RenderText(selection:SelectionInfo){
         if(selection.startNode == selection.endNode){
-            console.log("inline")
             this.RenderInlineText(selection.startNode,selection.startIndex,selection.endIndex)
         }else{
-            console.log("offline")
             this.RenderOfflineText(selection.startNode,selection.endNode,selection.startIndex,selection.endIndex)
         }
     }

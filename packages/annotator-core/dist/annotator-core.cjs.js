@@ -3,57 +3,42 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 class Store {
-    root;
     constructor(root) {
         this.root = root;
     }
 }
 
 class Text {
-    textContent;
-    parentNode;
-    needsBR;
-    className;
-    isLabeled;
-    currentNode;
-    constructor(parentNode, textContent, needsBR = false, className, isLabeled) {
-        this.currentNode = null;
+    constructor(parentNode, textContent, className) {
+        this.currentNode = document.createElement(exports.HTML_NODE_ENUMS.DIV);
+        this.childList = [];
         this.parentNode = parentNode;
-        this.isLabeled = isLabeled;
         this.textContent = textContent;
         this.className = className;
-        this.needsBR = needsBR;
         this.generateTextNode();
-        // generator BR
-        // const brNode = document.createElement(HTML_NODE_ENUMS.BR)
-        // this.parentNode.appendChild(brNode)
     }
     generateTextNode() {
-        const divNode = document.createElement(exports.HTML_NODE_ENUMS.DIV);
-        const spanNode = document.createElement(exports.HTML_NODE_ENUMS.SPAN);
-        spanNode.className = this.className;
-        spanNode.innerText = this.textContent;
-        this.currentNode = divNode;
-        this.currentNode.style.display = "inline";
-        this.currentNode.appendChild(spanNode);
-        if (this.needsBR) {
-            console.log(this.needsBR);
-            const brNode = document.createElement(exports.HTML_NODE_ENUMS.BR);
-            this.currentNode.appendChild(brNode);
+        console.log("--generate current node--");
+        this.currentNode.innerText = this.textContent;
+        this.currentNode.className = this.className;
+        if (this.parentNode != null) {
+            this.parentNode.appendChild(this.currentNode);
         }
-        this.parentNode.appendChild(divNode);
     }
-    addChildNodeToText(parentNode, textContent, className) {
-        const textNode = document.createElement(exports.HTML_NODE_ENUMS.SPAN);
-        textNode.innerText = textContent;
-        textNode.className = className;
-        parentNode.appendChild(textNode);
+    addChildNodeToText(parentText, childrenText) {
+        parentText.currentNode.innerText = "";
+        for (const item of childrenText) {
+            parentText.currentNode.appendChild(item.currentNode);
+        }
+        this.childList.push(...childrenText);
     }
+}
+function generateTextNode(textContent, isLabeled) {
+    const text = new Text(null, textContent, isLabeled ? exports.MOLAR_LABEL_CLASS_NAME.MOLAR_TEXT_LABLED : exports.MOLAR_LABEL_CLASS_NAME.MOLAR_TEXT_UNLABELED);
+    return text;
 }
 
 class View {
-    root;
-    textNodeList;
     constructor(root) {
         this.root = root;
         this.textNodeList = [];
@@ -63,13 +48,10 @@ class View {
     generatorTextNode() {
         console.log("view generator");
         const parentNode = this.root.element;
-        const spanTextArr = this.root.data.split(this.root.splitRegExp);
-        for (let i = 0; i < spanTextArr.length; i++) {
-            const textNode = new Text(parentNode, spanTextArr[i], true, "", false);
-            this.textNodeList.push({
-                text: textNode,
-                _molar_text_id: i
-            });
+        const nodeArr = this.root.data.split(this.root.splitRegExp);
+        for (let i = 0; i < nodeArr.length; i++) {
+            const text = new Text(parentNode, nodeArr[i], exports.MOLAR_LABEL_CLASS_NAME.MOLAR_TEXT_INITED);
+            this.textNodeList.push(text);
         }
     }
     registerViewEventHandler() {
@@ -78,21 +60,57 @@ class View {
         }.bind(this);
     }
     renderViewByTextNodeList(textNodeList) {
-        console.log(textNodeList);
         // remove all text
         for (let i = 0; i < this.root.element.children.length; i++) {
             this.root.element.removeChild(this.root.element.children[i]);
         }
         for (const item of textNodeList) {
-            this.root.element.appendChild(item.text.currentNode);
+            this.root.element.appendChild(item.currentNode);
         }
     }
-    UpdateTextNodeListIndex(insertArr, id) {
-        this.textNodeList.splice(id, 1, ...insertArr);
-        for (let i = 0; i < this.textNodeList.length; i++) {
-            this.textNodeList[i]._molar_text_id = i;
+    findTextByNode(SelectedNode) {
+        let searchTextList = this.root.view.textNodeList;
+        function findNodeInTree(searchTextList, SelectedNode) {
+            let result;
+            for (let i = 0; i < searchTextList.length; i++) {
+                if (searchTextList[i].currentNode == SelectedNode) {
+                    return searchTextList[i];
+                }
+                if (searchTextList[i].childList.length != 0) {
+                    result = findNodeInTree(searchTextList[i].childList, SelectedNode);
+                }
+            }
+            return result;
         }
-        this.renderViewByTextNodeList(this.textNodeList);
+        return findNodeInTree(searchTextList, SelectedNode);
+    }
+    findTextIndex(node) {
+        let findNode;
+        let searchTextList = this.root.view.textNodeList;
+        function findNodeInTree(searchTextList, SelectedNode) {
+            let result;
+            for (let i = 0; i < searchTextList.length; i++) {
+                if (searchTextList[i].currentNode == SelectedNode) {
+                    return searchTextList[i];
+                }
+                if (searchTextList[i].childList.length != 0) {
+                    result = findNodeInTree(searchTextList[i].childList, SelectedNode);
+                }
+            }
+            return result;
+        }
+        findNode = findNodeInTree(searchTextList, node);
+        console.log(findNode);
+        if (findNode.parentNode != null) {
+            return this.textNodeList.findIndex(e => {
+                return e == findNode;
+            });
+        }
+        else {
+            return this.textNodeList.findIndex(e => {
+                return e.childList.find(e => e == findNode) != null;
+            });
+        }
     }
 }
 
@@ -569,7 +587,6 @@ function unwrapListeners(arr) {
 }
 
 class TextSelectionHandler {
-    root;
     constructor(root) {
         this.root = root;
     }
@@ -592,27 +609,31 @@ class TextSelectionHandler {
         };
     }
     RenderInlineText(lineNode, startIndex, endIndex) {
-        console.log(lineNode);
-        const editSpan = this.root.view.textNodeList.find(e => {
-            return e.text.currentNode.children[0] == lineNode;
-        });
-        const spanText = editSpan.text.textContent;
-        const fontNode = { text: new Text(editSpan.text.currentNode, spanText.substring(0, startIndex), false, "", true), _molar_text_id: -1 };
-        const labelNode = { text: new Text(editSpan.text.currentNode, spanText.substring(startIndex, endIndex), false, "molar-annotator-text--labeled", true), _molar_text_id: -1 };
-        const afterNode = { text: new Text(editSpan.text.currentNode, spanText.substring(endIndex), !editSpan.text.isLabeled || endIndex != spanText.length || spanText.substring(endIndex) == "", "", true), _molar_text_id: -1 };
-        this.root.view.UpdateTextNodeListIndex([fontNode, labelNode, afterNode], editSpan._molar_text_id);
+        if (endIndex != -1) {
+            const currentText = this.root.view.findTextByNode(lineNode);
+            let fontNode = generateTextNode(lineNode.textContent.substring(0, startIndex), false);
+            let labelNode = generateTextNode(lineNode.textContent.substring(startIndex, endIndex), true);
+            let afterNode = generateTextNode(lineNode.textContent.substring(endIndex), false);
+            currentText.addChildNodeToText(currentText, [fontNode, labelNode, afterNode]);
+        }
+        else {
+            const currentText = this.root.view.findTextByNode(lineNode);
+            const fontNode = generateTextNode(lineNode.textContent.substring(0, startIndex), false);
+            const labelNode = generateTextNode(lineNode.textContent.substring(startIndex), true);
+            currentText.addChildNodeToText(currentText, [fontNode, labelNode]);
+        }
     }
     RenderOfflineText(startLineNode, endLineNode, startIndex, endIndex) {
-        console.log("offline");
-        // this.root.view.UpdateTextNodeListIndex()
+        this.root.view.findTextIndex(startLineNode);
+        this.root.view.findTextIndex(endLineNode);
+        this.RenderInlineText(startLineNode, startIndex, -1);
+        this.RenderInlineText(endLineNode, 0, endIndex);
     }
     RenderText(selection) {
         if (selection.startNode == selection.endNode) {
-            console.log("inline");
             this.RenderInlineText(selection.startNode, selection.startIndex, selection.endIndex);
         }
         else {
-            console.log("offline");
             this.RenderOfflineText(selection.startNode, selection.endNode, selection.startIndex, selection.endIndex);
         }
     }
@@ -629,19 +650,14 @@ exports.HTML_NODE_ENUMS = void 0;
     HTML_NODE_ENUMS["DIV"] = "div";
 })(exports.HTML_NODE_ENUMS || (exports.HTML_NODE_ENUMS = {}));
 
+exports.MOLAR_LABEL_CLASS_NAME = void 0;
+(function (MOLAR_LABEL_CLASS_NAME) {
+    MOLAR_LABEL_CLASS_NAME["MOLAR_TEXT_LABLED"] = "molar-annotator-text--labeled";
+    MOLAR_LABEL_CLASS_NAME["MOLAR_TEXT_UNLABELED"] = "molar-annotator-text--unlabeled";
+    MOLAR_LABEL_CLASS_NAME["MOLAR_TEXT_INITED"] = "molar-annotator-text--inited";
+})(exports.MOLAR_LABEL_CLASS_NAME || (exports.MOLAR_LABEL_CLASS_NAME = {}));
+
 class Core extends EventEmitter {
-    // 1. dataContent
-    data;
-    // 2. dataElement
-    element;
-    // 3. dataRegExp
-    splitRegExp;
-    // 4. textSelectionHandler
-    textSelectionHandler;
-    // 5. view
-    view;
-    // 6. store
-    store;
     constructor(data, element, splitRegExp = /\n/) {
         super();
         this.data = data;

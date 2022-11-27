@@ -2,7 +2,7 @@ import {Store} from '@molar/annotator-store'
 import {View} from '@molar/annotator-view'
 import {EventEmitter} from 'events';
 import {TextSelectionHandler} from './handler/textSelectionHandler'
-import {HTML_NODE_ENUMS} from './enums/index'
+import {HTML_NODE_ENUMS,MOLAR_LABEL_CLASS_NAME} from './enums/index'
 
 class Core extends EventEmitter{
     // 1. dataContent
@@ -33,5 +33,6 @@ class Core extends EventEmitter{
 }
 export {
     Core,
-    HTML_NODE_ENUMS
+    HTML_NODE_ENUMS,
+    MOLAR_LABEL_CLASS_NAME
 }
