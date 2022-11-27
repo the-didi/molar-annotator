@@ -1,10 +1,24 @@
 var MolarAnnotatorView = (function (exports) {
     'use strict';
 
+    class Label {
+        constructor(text) {
+            this.text = text;
+            this.renderDomElement();
+        }
+        renderDomElement() {
+            const labelNode = document.createElement(HTML_NODE_ENUMS.DIV);
+            labelNode.className = MOLAR_LABEL_CLASS_NAME.MOLAR_LABEL_INITED;
+            labelNode.innerText = "Positive";
+            this.text.currentNode.appendChild(labelNode);
+        }
+    }
+
     class Text {
         constructor(parentNode, textContent, className) {
             this.currentNode = document.createElement(HTML_NODE_ENUMS.DIV);
             this.childList = [];
+            this.textLabel = new Label(this);
             this.parentNode = parentNode;
             this.textContent = textContent;
             this.className = className;
@@ -39,12 +53,16 @@ var MolarAnnotatorView = (function (exports) {
         MOLAR_LABEL_CLASS_NAME["MOLAR_TEXT_LABLED"] = "molar-annotator-text--labeled";
         MOLAR_LABEL_CLASS_NAME["MOLAR_TEXT_UNLABELED"] = "molar-annotator-text--unlabeled";
         MOLAR_LABEL_CLASS_NAME["MOLAR_TEXT_INITED"] = "molar-annotator-text--inited";
+        MOLAR_LABEL_CLASS_NAME["MOLAR_LABEL_INITED"] = "molar-annotator-label--inited";
+        MOLAR_LABEL_CLASS_NAME["MOLAR_LABEL_SELECTED"] = "molar-annotator-label-selected";
+        MOLAR_LABEL_CLASS_NAME["MOLAR_LABEL_DESTORYED"] = "molar-annotator-label-destoryed";
     })(MOLAR_LABEL_CLASS_NAME || (MOLAR_LABEL_CLASS_NAME = {}));
 
     class View {
         constructor(root) {
             this.root = root;
             this.textNodeList = [];
+            this.labelNodeList = [];
             this.generatorTextNode();
             this.registerViewEventHandler();
         }
@@ -59,7 +77,12 @@ var MolarAnnotatorView = (function (exports) {
         }
         registerViewEventHandler() {
             this.root.element.onmouseup = function (e) {
-                this.root.textSelectionHandler.textSelection(e);
+                if (window.getSelection().type === "Range") {
+                    this.root.textSelectionHandler.textSelection(e);
+                }
+                else {
+                    console.log("building ~ ");
+                }
             }.bind(this);
         }
         renderViewByTextNodeList(textNodeList) {
@@ -114,6 +137,15 @@ var MolarAnnotatorView = (function (exports) {
                     return e.childList.find(e => e == findNode) != null;
                 });
             }
+        }
+        reRenderLineForLabel(index) {
+            const line = this.textNodeList[index];
+            const text = new Text(null, line.textContent, MOLAR_LABEL_CLASS_NAME.MOLAR_TEXT_LABLED);
+            line.addChildNodeToText(line, [text]);
+        }
+        renderLabel(renderNode) {
+            const label = new Label(renderNode);
+            this.labelNodeList.push(label);
         }
     }
 

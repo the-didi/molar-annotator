@@ -1,13 +1,15 @@
 import {Core,MOLAR_LABEL_CLASS_NAME} from '@molar/annotator-core'
 import {Text} from '@molar/annotator-text'
-
+import {Label} from '@molar/annotator-label'
 
 class View {
     readonly root:Core
     readonly textNodeList:Text[]
+    readonly labelNodeList:Label[]
     constructor(root:Core){
         this.root = root
         this.textNodeList = []
+        this.labelNodeList = []
         this.generatorTextNode()
         this.registerViewEventHandler()
     }
@@ -22,7 +24,11 @@ class View {
     }
     private registerViewEventHandler(){
         this.root.element.onmouseup = function(e){
-            this.root.textSelectionHandler.textSelection(e)
+            if(window.getSelection()!.type ==="Range"){
+                this.root.textSelectionHandler.textSelection(e)
+            }else{
+                console.log("building ~ ")
+            }
         }.bind(this)
     }
     private renderViewByTextNodeList(textNodeList: Text[]){
@@ -39,7 +45,7 @@ class View {
         let searchTextList = this.root.view.textNodeList
         function findNodeInTree(searchTextList:Text[],SelectedNode:Node):Text{
             let result
-            for(let i=0;i<searchTextList.length;i++){
+            for(let i=0;i<searchTextList.length;i++){       
                 if(searchTextList[i].currentNode == SelectedNode){
                     return searchTextList[i]
                 }
@@ -78,6 +84,14 @@ class View {
             })
         }
     }
-
+    public reRenderLineForLabel(index:number){
+        const line = this.textNodeList[index]
+        const text = new Text(null,line.textContent,MOLAR_LABEL_CLASS_NAME.MOLAR_TEXT_LABLED)
+        line.addChildNodeToText(line,[text])
+    }
+    public renderLabel(renderNode:Text){
+        const label = new Label(renderNode)
+        this.labelNodeList.push(label)
+    }
 }
 export {View}

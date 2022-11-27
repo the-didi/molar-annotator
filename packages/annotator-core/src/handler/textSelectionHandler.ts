@@ -1,6 +1,6 @@
 import {Core} from '@molar/annotator-core'
-import {Text,generateTextNode} from '@molar/annotator-text'
-import {HTML_NODE_ENUMS} from '@molar/annotator-core'
+import {generateTextNode} from '@molar/annotator-text'
+import { EventEmitter } from 'events'
 type SelectionInfo={
     startNode:Node|null,
     endNode: Node|null,
@@ -8,9 +8,10 @@ type SelectionInfo={
     endIndex: number
 }
 
-class TextSelectionHandler {
+class TextSelectionHandler extends EventEmitter{
     readonly root:Core
     constructor(root:Core){
+        super()
         this.root = root
     }
     private getSelectionInfo():SelectionInfo|null{
@@ -37,11 +38,14 @@ class TextSelectionHandler {
             let labelNode = generateTextNode(lineNode.textContent.substring(startIndex,endIndex),true)
             let afterNode = generateTextNode(lineNode.textContent.substring(endIndex),false)
             currentText.addChildNodeToText(currentText,[fontNode,labelNode,afterNode])
+            this.root.view.renderLabel(labelNode)
         }else{
+            console.log("inline render")
             const currentText = this.root.view.findTextByNode(lineNode)
-            const fontNode = generateTextNode(lineNode.textContent.substring(0,startIndex),false)
-            const labelNode = generateTextNode(lineNode.textContent.substring(startIndex),true)
-            currentText.addChildNodeToText(currentText,[fontNode,labelNode])
+            let fontNode = generateTextNode(lineNode.textContent.substring(0,startIndex),false)
+            let labelNode = generateTextNode(lineNode.textContent.substring(startIndex),true)
+            let afterNode = generateTextNode("",false)
+            currentText.addChildNodeToText(currentText,[fontNode,labelNode,afterNode])
         }
     }   
     private RenderOfflineText(startLineNode:Node,endLineNode:Node,startIndex:number,endIndex:number){
@@ -50,7 +54,7 @@ class TextSelectionHandler {
         this.RenderInlineText(startLineNode,startIndex,-1)
         this.RenderInlineText(endLineNode,0,endIndex)
         for(let i=startLineIndex+1;i<endLineIndex;i++){
-            
+            this.root.view.reRenderLineForLabel(i)   
         }
     }
     private RenderText(selection:SelectionInfo){
@@ -63,7 +67,10 @@ class TextSelectionHandler {
     public textSelection(event:Event){
         const selection = this.getSelectionInfo()
         this.RenderText(selection)
-        
+        if(selection){
+            this.root.emit("textSelected",selection.startIndex,selection.endIndex)
+        }
+        window.getSelection()?.removeAllRanges()
     }
 }
 export {TextSelectionHandler}

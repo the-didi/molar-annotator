@@ -7,15 +7,37 @@
     <title>简单文字标注</title>
     <style>
       .molar-annotator-text--labeled {
-        background-color: red;
-        color: white;
+        position: relative;
+        color: red;
         display: inline;
+        border: 0.1px solid black;
+        box-sizing: border-box;
+        overflow: visible;
       }
       .molar-annotator-text--inited {
         display: block;
       }
       .molar-annotator-text--unlabeled {
         display: inline;
+      }
+      .molar-annotator-label--inited {
+        position: absolute;
+        margin-top: -10px;
+        left: 0;
+        font-size: 8px;
+        width: 100%;
+        height: 10px;
+        background-color: red;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        border: 1px solid black;
+      }
+      .moalr-annotator-label--selected {
+      }
+      .molar-annotator-label--destoryed {
       }
     </style>
   </head>
@@ -30,7 +52,9 @@
       廉君宣恶言`;
       let domElement = document.getElementById("example");
       const annotator = new Core(originString, domElement);
-      annotator.on("textSelected", (startIndex, endIndex) => {});
+      annotator.on("textSelected", (startIndex, endIndex) => {
+        console.log(startIndex, endIndex);
+      });
     </script>
   </body>
 </html>

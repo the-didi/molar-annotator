@@ -8,10 +8,24 @@ class Store {
     }
 }
 
+class Label {
+    constructor(text) {
+        this.text = text;
+        this.renderDomElement();
+    }
+    renderDomElement() {
+        const labelNode = document.createElement(exports.HTML_NODE_ENUMS.DIV);
+        labelNode.className = exports.MOLAR_LABEL_CLASS_NAME.MOLAR_LABEL_INITED;
+        labelNode.innerText = "Positive";
+        this.text.currentNode.appendChild(labelNode);
+    }
+}
+
 class Text {
     constructor(parentNode, textContent, className) {
         this.currentNode = document.createElement(exports.HTML_NODE_ENUMS.DIV);
         this.childList = [];
+        this.textLabel = new Label(this);
         this.parentNode = parentNode;
         this.textContent = textContent;
         this.className = className;
@@ -42,6 +56,7 @@ class View {
     constructor(root) {
         this.root = root;
         this.textNodeList = [];
+        this.labelNodeList = [];
         this.generatorTextNode();
         this.registerViewEventHandler();
     }
@@ -56,7 +71,12 @@ class View {
     }
     registerViewEventHandler() {
         this.root.element.onmouseup = function (e) {
-            this.root.textSelectionHandler.textSelection(e);
+            if (window.getSelection().type === "Range") {
+                this.root.textSelectionHandler.textSelection(e);
+            }
+            else {
+                console.log("building ~ ");
+            }
         }.bind(this);
     }
     renderViewByTextNodeList(textNodeList) {
@@ -111,6 +131,15 @@ class View {
                 return e.childList.find(e => e == findNode) != null;
             });
         }
+    }
+    reRenderLineForLabel(index) {
+        const line = this.textNodeList[index];
+        const text = new Text(null, line.textContent, exports.MOLAR_LABEL_CLASS_NAME.MOLAR_TEXT_LABLED);
+        line.addChildNodeToText(line, [text]);
+    }
+    renderLabel(renderNode) {
+        const label = new Label(renderNode);
+        this.labelNodeList.push(label);
     }
 }
 
@@ -586,8 +615,9 @@ function unwrapListeners(arr) {
   return ret;
 }
 
-class TextSelectionHandler {
+class TextSelectionHandler extends EventEmitter {
     constructor(root) {
+        super();
         this.root = root;
     }
     getSelectionInfo() {
@@ -615,19 +645,25 @@ class TextSelectionHandler {
             let labelNode = generateTextNode(lineNode.textContent.substring(startIndex, endIndex), true);
             let afterNode = generateTextNode(lineNode.textContent.substring(endIndex), false);
             currentText.addChildNodeToText(currentText, [fontNode, labelNode, afterNode]);
+            this.root.view.renderLabel(labelNode);
         }
         else {
+            console.log("inline render");
             const currentText = this.root.view.findTextByNode(lineNode);
-            const fontNode = generateTextNode(lineNode.textContent.substring(0, startIndex), false);
-            const labelNode = generateTextNode(lineNode.textContent.substring(startIndex), true);
-            currentText.addChildNodeToText(currentText, [fontNode, labelNode]);
+            let fontNode = generateTextNode(lineNode.textContent.substring(0, startIndex), false);
+            let labelNode = generateTextNode(lineNode.textContent.substring(startIndex), true);
+            let afterNode = generateTextNode("", false);
+            currentText.addChildNodeToText(currentText, [fontNode, labelNode, afterNode]);
         }
     }
     RenderOfflineText(startLineNode, endLineNode, startIndex, endIndex) {
-        this.root.view.findTextIndex(startLineNode);
-        this.root.view.findTextIndex(endLineNode);
+        const startLineIndex = this.root.view.findTextIndex(startLineNode);
+        const endLineIndex = this.root.view.findTextIndex(endLineNode);
         this.RenderInlineText(startLineNode, startIndex, -1);
         this.RenderInlineText(endLineNode, 0, endIndex);
+        for (let i = startLineIndex + 1; i < endLineIndex; i++) {
+            this.root.view.reRenderLineForLabel(i);
+        }
     }
     RenderText(selection) {
         if (selection.startNode == selection.endNode) {
@@ -638,8 +674,13 @@ class TextSelectionHandler {
         }
     }
     textSelection(event) {
+        var _a;
         const selection = this.getSelectionInfo();
         this.RenderText(selection);
+        if (selection) {
+            this.root.emit("textSelected", selection.startIndex, selection.endIndex);
+        }
+        (_a = window.getSelection()) === null || _a === void 0 ? void 0 : _a.removeAllRanges();
     }
 }
 
@@ -655,6 +696,9 @@ exports.MOLAR_LABEL_CLASS_NAME = void 0;
     MOLAR_LABEL_CLASS_NAME["MOLAR_TEXT_LABLED"] = "molar-annotator-text--labeled";
     MOLAR_LABEL_CLASS_NAME["MOLAR_TEXT_UNLABELED"] = "molar-annotator-text--unlabeled";
     MOLAR_LABEL_CLASS_NAME["MOLAR_TEXT_INITED"] = "molar-annotator-text--inited";
+    MOLAR_LABEL_CLASS_NAME["MOLAR_LABEL_INITED"] = "molar-annotator-label--inited";
+    MOLAR_LABEL_CLASS_NAME["MOLAR_LABEL_SELECTED"] = "molar-annotator-label-selected";
+    MOLAR_LABEL_CLASS_NAME["MOLAR_LABEL_DESTORYED"] = "molar-annotator-label-destoryed";
 })(exports.MOLAR_LABEL_CLASS_NAME || (exports.MOLAR_LABEL_CLASS_NAME = {}));
 
 class Core extends EventEmitter {
